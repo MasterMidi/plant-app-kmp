@@ -1,0 +1,60 @@
+*.iml
+*.ipr
+.kotlin
+.gradle
+**/build/
+/*/out
+xcuserdata
+!src/**/build/
+local.properties
+.idea
+.DS_Store
+captures
+.navigation/
+.externalNativeBuild
+.cxx
+
+# Editor temp files
+*~
+*.swp
+
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+*.xcuserstate
+*.xcscheme
+
+# CocoaPods
+Pods/
+
+# iOS App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Android App packaging
+*.apk
+*.ap_
+*.aab
+
+# Generated files
+bin/
+gen/
+*.class
+*.dex
+
+# Gradle wrapper
+!/gradle/wrapper/gradle-wrapper.jar
+
+node_modules/
+
+# Nix
+result
+.direnv/
+
+# direnv
+.envrc.local
