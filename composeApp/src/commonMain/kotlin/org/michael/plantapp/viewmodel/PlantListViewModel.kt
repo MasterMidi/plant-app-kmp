@@ -7,6 +7,7 @@ import org.michael.plantapp.model.Plant
 import org.michael.plantapp.model.PlantId
 import org.michael.plantapp.model.PlantWateringSummary
 import org.michael.plantapp.model.Watering
+import org.michael.plantapp.model.WateringIntensity
 import org.michael.plantapp.model.summariesByPlant
 
 class PlantListViewModel : ViewModel() {
@@ -41,12 +42,9 @@ class PlantListViewModel : ViewModel() {
     fun addWatering(
         plantId: PlantId,
         wateredAt: Instant,
-        amountMilliliters: Int? = null,
+        intensity: WateringIntensity = WateringIntensity.Moderate,
         notes: String = "",
     ) {
-        require(amountMilliliters == null || amountMilliliters > 0) {
-            "Watering amount must be positive"
-        }
         require(_plants.any { it.id == plantId }) {
             "Cannot add watering for unknown plant"
         }
@@ -56,7 +54,7 @@ class PlantListViewModel : ViewModel() {
                 id = nextWateringId++,
                 plantId = plantId,
                 wateredAt = wateredAt,
-                amountMilliliters = amountMilliliters,
+                intensity = intensity,
                 notes = notes.trim(),
             ),
         )

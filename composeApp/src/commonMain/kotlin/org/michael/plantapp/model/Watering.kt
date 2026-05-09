@@ -8,9 +8,15 @@ data class Watering(
     val id: WateringId,
     val plantId: PlantId,
     val wateredAt: Instant,
-    val amountMilliliters: Int? = null,
+    val intensity: WateringIntensity = WateringIntensity.Moderate,
     val notes: String = "",
 )
+
+enum class WateringIntensity {
+    Light,
+    Moderate,
+    DeepSoak,
+}
 
 data class PlantWateringSummary(
     val lastWateredAt: Instant? = null,
