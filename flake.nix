@@ -33,7 +33,7 @@
 
       android-sdk = android-nixpkgs.sdk.${system} (sdkPkgs: with sdkPkgs; [
         cmdline-tools-latest
-        build-tools-35-0-0
+        build-tools-36-0-0
         platform-tools
         platforms-android-35
         platforms-android-36
@@ -96,7 +96,7 @@
             # Tell AGP to use the Nix-patched aapt2 instead of downloading
             # an unpatched binary from Maven (which won't run on NixOS).
             name  = "GRADLE_OPTS";
-            value = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${sdkPath}/build-tools/35.0.0/aapt2";
+            value = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${sdkPath}/build-tools/36.0.0/aapt2";
           }
           {
             # Emulator GPU / audio libraries
