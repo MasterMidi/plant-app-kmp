@@ -55,6 +55,7 @@ node_modules/
 # Nix
 result
 .direnv/
+.android/
 
 # direnv
 .envrc.local
