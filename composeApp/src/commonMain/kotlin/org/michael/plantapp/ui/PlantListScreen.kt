@@ -54,23 +54,26 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.michael.plantapp.model.Pest
 import org.michael.plantapp.model.Plant
+import org.michael.plantapp.model.PlantId
 import org.michael.plantapp.model.PlantWateringSummary
-import org.michael.plantapp.viewmodel.PlantListViewModel
+import org.michael.plantapp.viewmodel.PlantListState
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantListScreen(
-    viewModel: PlantListViewModel,
+    state: PlantListState,
     onCreatePlant: () -> Unit,
     onEditPlant: (Plant) -> Unit,
+    onWaterPlant: (PlantId) -> Unit,
+    onDeletePlant: (PlantId) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     var deletingPlant by remember { mutableStateOf<Plant?>(null) }
     var detailItem by remember { mutableStateOf<PlantListItem?>(null) }
-    val wateringSummaries = viewModel.wateringSummariesByPlant
-    val pestsById = viewModel.pests.associateBy { it.id }
-    val plantListItems = viewModel.plants.map { plant ->
+    val wateringSummaries = state.wateringSummariesByPlant
+    val pestsById = state.pests.associateBy { it.id }
+    val plantListItems = state.plants.map { plant ->
         PlantListItem(
             plant = plant,
             pests = plant.pestIds.mapNotNull { pestsById[it] },
@@ -125,7 +128,7 @@ fun PlantListScreen(
                             item = item,
                             onShowDetails = { detailItem = item },
                             onEdit = { onEditPlant(item.plant) },
-                            onWater = { viewModel.waterPlant(item.plant.id) },
+                            onWater = { onWaterPlant(item.plant.id) },
                             onDeleteRequest = { deletingPlant = item.plant },
                         )
                     }
@@ -141,7 +144,7 @@ fun PlantListScreen(
             text = { Text("\"${plant.name}\" will be permanently removed.") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.deletePlant(plant.id)
+                    onDeletePlant(plant.id)
                     deletingPlant = null
                 }) { Text("Delete") }
             },

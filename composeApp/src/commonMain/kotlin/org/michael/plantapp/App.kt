@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.michael.plantapp.model.KnownPlant
 import org.michael.plantapp.model.PestId
@@ -26,13 +27,16 @@ fun App() {
 
     MaterialTheme(colorScheme = colorScheme) {
         val viewModel = viewModel { PlantListViewModel() }
+        val plantListState by viewModel.state.collectAsStateWithLifecycle()
         var route by remember { mutableStateOf<PlantRoute>(PlantRoute.List) }
 
         when (val currentRoute = route) {
             PlantRoute.List -> PlantListScreen(
-                viewModel = viewModel,
+                state = plantListState,
                 onCreatePlant = { route = PlantRoute.Create() },
                 onEditPlant = { plant -> route = PlantRoute.Edit(plant.id) },
+                onWaterPlant = viewModel::waterPlant,
+                onDeletePlant = viewModel::deletePlant,
                 onOpenSettings = { route = PlantRoute.Settings },
             )
 
@@ -41,7 +45,7 @@ fun App() {
                 initialScientificName = currentRoute.draft.scientificName,
                 initialKnownPlantId = currentRoute.draft.knownPlantId,
                 initialPestIds = currentRoute.draft.pestIds,
-                availablePests = viewModel.pests,
+                availablePests = plantListState.pests,
                 onCreatePest = viewModel::addPest,
                 onSave = { name, scientificName, knownPlantId, pestIds ->
                     viewModel.addPlant(name, scientificName, knownPlantId, pestIds)
@@ -63,13 +67,15 @@ fun App() {
             )
 
             is PlantRoute.Edit -> {
-                val plant = viewModel.plants.firstOrNull { it.id == currentRoute.plantId }
+                val plant = plantListState.plants.firstOrNull { it.id == currentRoute.plantId }
 
                 if (plant == null) {
                     PlantListScreen(
-                        viewModel = viewModel,
+                        state = plantListState,
                         onCreatePlant = { route = PlantRoute.Create() },
                         onEditPlant = { selectedPlant -> route = PlantRoute.Edit(selectedPlant.id) },
+                        onWaterPlant = viewModel::waterPlant,
+                        onDeletePlant = viewModel::deletePlant,
                         onOpenSettings = { route = PlantRoute.Settings },
                     )
                 } else {
@@ -81,7 +87,7 @@ fun App() {
                         initialScientificName = draft.scientificName,
                         initialKnownPlantId = draft.knownPlantId,
                         initialPestIds = draft.pestIds,
-                        availablePests = viewModel.pests,
+                        availablePests = plantListState.pests,
                         onCreatePest = viewModel::addPest,
                         onSave = { name, scientificName, knownPlantId, pestIds ->
                             viewModel.updatePlant(

@@ -1,36 +1,27 @@
 package org.michael.plantapp.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import org.michael.plantapp.model.BuiltInPests
 import org.michael.plantapp.model.Pest
 import org.michael.plantapp.model.PestId
 import org.michael.plantapp.model.Plant
 import org.michael.plantapp.model.PlantId
-import org.michael.plantapp.model.PlantWateringSummary
 import org.michael.plantapp.model.Watering
 import org.michael.plantapp.model.WateringIntensity
-import org.michael.plantapp.model.summariesByPlant
 
 class PlantListViewModel : ViewModel() {
     private var nextId = 1L
     private var nextPestId = 1L
     private var nextWateringId = 1L
 
-    private val _plants = mutableStateListOf<Plant>()
-    val plants: List<Plant> get() = _plants
-
-    private val _pests = mutableStateListOf<Pest>().apply { addAll(BuiltInPests.all) }
-    val pests: List<Pest> get() = _pests
-
-    private val _waterings = mutableStateListOf<Watering>()
-    val waterings: List<Watering> get() = _waterings
-
-    val wateringSummariesByPlant: Map<PlantId, PlantWateringSummary>
-        get() = _waterings.summariesByPlant()
+    private val _state = MutableStateFlow(PlantListState())
+    val state: StateFlow<PlantListState> = _state.asStateFlow()
 
     fun addPlant(
         name: String,
@@ -38,15 +29,17 @@ class PlantListViewModel : ViewModel() {
         knownPlantId: String? = null,
         pestIds: List<PestId> = emptyList(),
     ) {
-        _plants.add(
-            Plant(
-                id = nextId++,
-                name = name.trim(),
-                scientificName = scientificName.trim(),
-                knownPlantId = knownPlantId?.takeIf { it.isNotBlank() },
-                pestIds = knownPestIds(pestIds),
-            ),
-        )
+        _state.update { state ->
+            state.copy(
+                plants = state.plants + Plant(
+                    id = nextId++,
+                    name = name.trim(),
+                    scientificName = scientificName.trim(),
+                    knownPlantId = knownPlantId?.takeIf { it.isNotBlank() },
+                    pestIds = knownPestIds(pestIds),
+                ),
+            )
+        }
     }
 
     fun addPest(name: String, description: String): Pest {
@@ -55,16 +48,25 @@ class PlantListViewModel : ViewModel() {
             name = name.trim(),
             description = description.trim(),
         )
-        _pests.add(pest)
+        _state.update { state -> state.copy(pests = state.pests + pest) }
         return pest
     }
 
     fun knownPestIds(pestIds: List<PestId>): List<PestId> =
-        pestIds.distinct().filter { id -> _pests.any { it.id == id } }
+        pestIds.distinct().filter { id -> state.value.pests.any { it.id == id } }
 
     fun updatePlant(plant: Plant) {
-        val index = _plants.indexOfFirst { it.id == plant.id }
-        if (index >= 0) _plants[index] = plant.copy(pestIds = knownPestIds(plant.pestIds))
+        _state.update { state ->
+            state.copy(
+                plants = state.plants.map { existingPlant ->
+                    if (existingPlant.id == plant.id) {
+                        plant.copy(pestIds = knownPestIds(plant.pestIds))
+                    } else {
+                        existingPlant
+                    }
+                },
+            )
+        }
     }
 
     fun addWatering(
@@ -73,19 +75,21 @@ class PlantListViewModel : ViewModel() {
         intensity: WateringIntensity = WateringIntensity.Moderate,
         notes: String = "",
     ) {
-        require(_plants.any { it.id == plantId }) {
+        require(state.value.plants.any { it.id == plantId }) {
             "Cannot add watering for unknown plant"
         }
 
-        _waterings.add(
-            Watering(
-                id = nextWateringId++,
-                plantId = plantId,
-                wateredAt = wateredAt,
-                intensity = intensity,
-                notes = notes.trim(),
-            ),
-        )
+        _state.update { state ->
+            state.copy(
+                waterings = state.waterings + Watering(
+                    id = nextWateringId++,
+                    plantId = plantId,
+                    wateredAt = wateredAt,
+                    intensity = intensity,
+                    notes = notes.trim(),
+                ),
+            )
+        }
     }
 
     @OptIn(ExperimentalTime::class)
@@ -98,12 +102,16 @@ class PlantListViewModel : ViewModel() {
     }
 
     fun wateringsForPlant(plantId: PlantId): List<Watering> =
-        _waterings
+        state.value.waterings
             .filter { it.plantId == plantId }
             .sortedByDescending { it.wateredAt }
 
     fun deletePlant(id: PlantId) {
-        _plants.removeAll { it.id == id }
-        _waterings.removeAll { it.plantId == id }
+        _state.update { state ->
+            state.copy(
+                plants = state.plants.filterNot { it.id == id },
+                waterings = state.waterings.filterNot { it.plantId == id },
+            )
+        }
     }
 }
