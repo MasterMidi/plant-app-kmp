@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,6 +62,7 @@ fun PlantListScreen(
     onEditPlant: (Plant) -> Unit,
 ) {
     var deletingPlant by remember { mutableStateOf<Plant?>(null) }
+    var detailItem by remember { mutableStateOf<PlantListItem?>(null) }
     val wateringSummaries = viewModel.wateringSummariesByPlant
     val plantListItems = viewModel.plants.map { plant ->
         PlantListItem(
@@ -94,6 +96,7 @@ fun PlantListScreen(
                     items(plantListItems, key = { it.plant.id }) { item ->
                         PlantItem(
                             item = item,
+                            onShowDetails = { detailItem = item },
                             onEdit = { onEditPlant(item.plant) },
                             onWater = { viewModel.waterPlant(item.plant.id) },
                             onDeleteRequest = { deletingPlant = item.plant },
@@ -120,6 +123,17 @@ fun PlantListScreen(
             },
         )
     }
+
+    detailItem?.let { item ->
+        PlantDetailsDialog(
+            item = item,
+            onDismiss = { detailItem = null },
+            onEdit = {
+                detailItem = null
+                onEditPlant(item.plant)
+            },
+        )
+    }
 }
 
 private data class PlantListItem(
@@ -131,6 +145,7 @@ private data class PlantListItem(
 @Composable
 private fun PlantItem(
     item: PlantListItem,
+    onShowDetails: () -> Unit,
     onEdit: () -> Unit,
     onWater: () -> Unit,
     onDeleteRequest: () -> Unit,
@@ -202,7 +217,7 @@ private fun PlantItem(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp)
                     .combinedClickable(
-                        onClick = {},
+                        onClick = onShowDetails,
                         onLongClick = { showMenu = true },
                     ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -241,6 +256,95 @@ private fun PlantItem(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PlantDetailsDialog(
+    item: PlantListItem,
+    onDismiss: () -> Unit,
+    onEdit: () -> Unit,
+) {
+    val plant = item.plant
+    val wateringSummary = item.wateringSummary
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Image placeholder",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Text(
+                    text = "Common name",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Text(
+                    text = plant.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+
+                if (plant.scientificName.isNotBlank()) {
+                    Text(
+                        text = "Scientific name",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                    Text(
+                        text = plant.scientificName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Text(
+                    text = "Watering details",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                Text(
+                    text = wateringSummary.detailsText(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onEdit) { Text("Edit") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+    )
+}
+
+private fun PlantWateringSummary.detailsText(): String {
+    val wateringText = when (wateringCount) {
+        0 -> "No waterings yet"
+        1 -> "Watered 1 time"
+        else -> "Watered $wateringCount times"
+    }
+
+    return if (lastWateredAt == null) {
+        wateringText
+    } else {
+        "$wateringText\nLast watered $lastWateredAt"
     }
 }
 
