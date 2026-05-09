@@ -40,15 +40,17 @@ import org.michael.plantapp.viewmodel.PlantListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlantListScreen(viewModel: PlantListViewModel) {
-    var showAddDialog by remember { mutableStateOf(false) }
-    var editingPlant by remember { mutableStateOf<Plant?>(null) }
+fun PlantListScreen(
+    viewModel: PlantListViewModel,
+    onCreatePlant: () -> Unit,
+    onEditPlant: (Plant) -> Unit,
+) {
     var deletingPlant by remember { mutableStateOf<Plant?>(null) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("My plants") }) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
+            FloatingActionButton(onClick = onCreatePlant) {
                 Text("+", fontSize = 24.sp)
             }
         },
@@ -70,34 +72,13 @@ fun PlantListScreen(viewModel: PlantListViewModel) {
                     items(viewModel.plants, key = { it.id }) { plant ->
                         PlantItem(
                             plant = plant,
-                            onEdit = { editingPlant = plant },
+                            onEdit = { onEditPlant(plant) },
                             onDeleteRequest = { deletingPlant = plant },
                         )
                     }
                 }
             }
         }
-    }
-
-    if (showAddDialog) {
-        PlantFormDialog(
-            onConfirm = { name, sci ->
-                viewModel.addPlant(name, sci)
-                showAddDialog = false
-            },
-            onDismiss = { showAddDialog = false },
-        )
-    }
-
-    editingPlant?.let { plant ->
-        PlantFormDialog(
-            existing = plant,
-            onConfirm = { name, sci ->
-                viewModel.updatePlant(plant.copy(name = name, scientificName = sci))
-                editingPlant = null
-            },
-            onDismiss = { editingPlant = null },
-        )
     }
 
     deletingPlant?.let { plant ->
