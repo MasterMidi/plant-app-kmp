@@ -1,6 +1,8 @@
 package org.michael.plantapp
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,11 +15,15 @@ import org.michael.plantapp.model.SampleKnownPlants
 import org.michael.plantapp.ui.KnownPlantSearchScreen
 import org.michael.plantapp.ui.PlantFormScreen
 import org.michael.plantapp.ui.PlantListScreen
+import org.michael.plantapp.ui.SettingsScreen
 import org.michael.plantapp.viewmodel.PlantListViewModel
 
 @Composable
 fun App() {
-    MaterialTheme {
+    var isDarkTheme by remember { mutableStateOf(false) }
+    val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
+
+    MaterialTheme(colorScheme = colorScheme) {
         val viewModel = viewModel { PlantListViewModel() }
         var route by remember { mutableStateOf<PlantRoute>(PlantRoute.List) }
 
@@ -26,6 +32,7 @@ fun App() {
                 viewModel = viewModel,
                 onCreatePlant = { route = PlantRoute.Create() },
                 onEditPlant = { plant -> route = PlantRoute.Edit(plant.id) },
+                onOpenSettings = { route = PlantRoute.Settings },
             )
 
             is PlantRoute.Create -> PlantFormScreen(
@@ -58,6 +65,7 @@ fun App() {
                         viewModel = viewModel,
                         onCreatePlant = { route = PlantRoute.Create() },
                         onEditPlant = { selectedPlant -> route = PlantRoute.Edit(selectedPlant.id) },
+                        onOpenSettings = { route = PlantRoute.Settings },
                     )
                 } else {
                     val draft = currentRoute.draft ?: plant.toDraft()
@@ -103,12 +111,19 @@ fun App() {
                     route = currentRoute.returnTo.toRoute()
                 },
             )
+
+            PlantRoute.Settings -> SettingsScreen(
+                isDarkTheme = isDarkTheme,
+                onThemeChange = { isDarkTheme = it },
+                onBack = { route = PlantRoute.List },
+            )
         }
     }
 }
 
 private sealed interface PlantRoute {
     data object List : PlantRoute
+    data object Settings : PlantRoute
     data class Create(val draft: PlantDraft = PlantDraft()) : PlantRoute
     data class Edit(val plantId: Long, val draft: PlantDraft? = null) : PlantRoute
     data class SelectKnownPlant(val returnTo: PlantFormRoute) : PlantRoute

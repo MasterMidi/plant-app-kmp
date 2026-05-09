@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -29,6 +30,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,6 +63,7 @@ fun PlantListScreen(
     viewModel: PlantListViewModel,
     onCreatePlant: () -> Unit,
     onEditPlant: (Plant) -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     var deletingPlant by remember { mutableStateOf<Plant?>(null) }
     var detailItem by remember { mutableStateOf<PlantListItem?>(null) }
@@ -72,7 +76,27 @@ fun PlantListScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("My plants") }) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "My plants",
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Open settings",
+                        )
+                    }
+                },
+                expandedHeight = 52.dp,
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onCreatePlant) {
                 Text("+", fontSize = 24.sp)
