@@ -10,8 +10,15 @@ class PlantListViewModel : ViewModel() {
     private val _plants = mutableStateListOf<Plant>()
     val plants: List<Plant> get() = _plants
 
-    fun addPlant(name: String, scientificName: String) {
-        _plants.add(Plant(id = nextId++, name = name.trim(), scientificName = scientificName.trim()))
+    fun addPlant(name: String, scientificName: String, knownPlantScientificName: String? = null) {
+        _plants.add(
+            Plant(
+                id = nextId++,
+                name = name.trim(),
+                scientificName = scientificName.trim(),
+                knownPlantScientificName = knownPlantScientificName?.takeIf { it.isNotBlank() },
+            ),
+        )
     }
 
     fun updatePlant(plant: Plant) {

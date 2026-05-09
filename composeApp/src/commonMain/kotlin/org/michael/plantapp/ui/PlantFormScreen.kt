@@ -30,11 +30,18 @@ import org.michael.plantapp.model.Plant
 @Composable
 fun PlantFormScreen(
     existing: Plant? = null,
-    onSave: (name: String, scientificName: String) -> Unit,
+    initialName: String = existing?.name ?: "",
+    initialScientificName: String = existing?.scientificName ?: "",
+    initialKnownPlantScientificName: String? = existing?.knownPlantScientificName,
+    onSave: (name: String, scientificName: String, knownPlantScientificName: String?) -> Unit,
     onCancel: () -> Unit,
+    onSearchKnownPlant: (name: String, scientificName: String, knownPlantScientificName: String?) -> Unit,
 ) {
-    var name by remember { mutableStateOf(existing?.name ?: "") }
-    var scientificName by remember { mutableStateOf(existing?.scientificName ?: "") }
+    var name by remember(existing?.id, initialName) { mutableStateOf(initialName) }
+    var scientificName by remember(existing?.id, initialScientificName) { mutableStateOf(initialScientificName) }
+    var knownPlantScientificName by remember(existing?.id, initialKnownPlantScientificName) {
+        mutableStateOf(initialKnownPlantScientificName)
+    }
 
     Scaffold(
         topBar = {
@@ -63,12 +70,26 @@ fun PlantFormScreen(
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = scientificName,
-                onValueChange = { scientificName = it },
+                onValueChange = {
+                    scientificName = it
+                    knownPlantScientificName = null
+                },
                 label = { Text("Scientific name") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                trailingIcon = {
+                    TextButton(
+                        onClick = { onSearchKnownPlant(name, scientificName, knownPlantScientificName) },
+                    ) {
+                        Text("Search")
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
+            if (knownPlantScientificName != null) {
+                Spacer(Modifier.height(8.dp))
+                Text("Linked to known plant")
+            }
             Spacer(Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onCancel) {
@@ -76,7 +97,7 @@ fun PlantFormScreen(
                 }
                 Spacer(Modifier.width(8.dp))
                 Button(
-                    onClick = { onSave(name, scientificName) },
+                    onClick = { onSave(name, scientificName, knownPlantScientificName) },
                     enabled = name.isNotBlank(),
                 ) {
                     Text(if (existing == null) "Add" else "Save")
