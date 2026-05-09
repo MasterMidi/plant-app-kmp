@@ -1,0 +1,23 @@
+{
+  "skill_name": "change-message",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a change message for a jj change that bumps requests from 2.31.0 to 2.32.3 and refreshes the lockfile. Keep it short.",
+      "expected_output": "A concise lowercase conventional message like `chore(deps): bump requests to 2.32.3`, without an unnecessary body.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Draft a useful change message for this summary: refresh tokens are now checked for expiry before the session database lookup, which avoids work on invalid requests and makes auth error handling match access tokens.",
+      "expected_output": "A `fix(auth): ...` message with a body explaining why the validation moved and what behavior becomes consistent.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Please review this proposed change message and say if it is good enough: `update`. If not, rewrite it. Context: I split the Retsinformation raw scraper retry loop from archive writing so failed downloads do not leave partial files behind.",
+      "expected_output": "A rejection of the vague message and a rewritten `refactor(retsinformation): ...` or `fix(retsinformation): ...` message with context about retry and atomic archive writes.",
+      "files": []
+    }
+  ]
+}
