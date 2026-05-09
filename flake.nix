@@ -13,9 +13,11 @@
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    opencode.url = "github:anomalyco/opencode/v1.14.40";
   };
 
-  outputs = { self, nixpkgs, android-nixpkgs, devshell }:
+  outputs = { self, nixpkgs, android-nixpkgs, devshell, opencode }:
     let
       # Change to "aarch64-linux" if on ARM — also update the system image below
       system = "x86_64-linux";
@@ -51,13 +53,13 @@
         # Graphics / display
         libGL
         vulkan-loader
-        xorg.libX11
-        xorg.libXext
-        xorg.libXrandr
-        xorg.libxcb
-        xorg.libXi
-        xorg.libXcursor
-        xorg.libXfixes
+        libx11
+        libxext
+        libxrandr
+        libxcb
+        libxi
+        libxcursor
+        libxfixes
         # Audio
         libpulseaudio
         alsa-lib
@@ -66,6 +68,7 @@
         nspr
         fontconfig
         freetype
+        stdenv.cc.cc.lib
         expat
         libdrm
         dbus
@@ -108,6 +111,8 @@
         packages = [
           pkgs.jdk17
           android-sdk
+          pkgs.kotlin-language-server
+          opencode.packages.${system}.opencode
         ];
 
         commands = [
