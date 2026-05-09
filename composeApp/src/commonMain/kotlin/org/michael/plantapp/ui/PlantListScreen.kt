@@ -1,43 +1,57 @@
 package org.michael.plantapp.ui
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import org.michael.plantapp.model.Plant
 import org.michael.plantapp.model.PlantWateringSummary
 import org.michael.plantapp.viewmodel.PlantListViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +95,7 @@ fun PlantListScreen(
                         PlantItem(
                             item = item,
                             onEdit = { onEditPlant(item.plant) },
+                            onWater = { viewModel.waterPlant(item.plant.id) },
                             onDeleteRequest = { deletingPlant = item.plant },
                         )
                     }
@@ -112,49 +127,76 @@ private data class PlantListItem(
     val wateringSummary: PlantWateringSummary = PlantWateringSummary(),
 )
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PlantItem(
     item: PlantListItem,
     onEdit: () -> Unit,
+    onWater: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var shouldWater by remember(item.plant.id) { mutableStateOf(false) }
+    var actionSwipeOpen by remember(item.plant.id) { mutableStateOf(false) }
     val plant = item.plant
     val wateringSummary = item.wateringSummary
+    val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val actionSize = 64.dp
+    val openOffset = 72.dp
+    val offset = remember(item.plant.id) { Animatable(0f) }
+    val openOffsetPx = with(density) { openOffset.toPx() }
+    val editThresholdPx = with(density) { actionSize.toPx() }
 
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onEdit()
-            }
-            false // returning false snaps back automatically; we never commit the dismiss
-        },
-    )
+    fun closeAndSaveActions() {
+        coroutineScope.launch {
+            offset.animateTo(0f)
+            if (shouldWater) onWater()
+            shouldWater = false
+            actionSwipeOpen = false
+        }
+    }
 
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = false,
-        backgroundContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = 16.dp),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                Button(
-                    onClick = onEdit,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    ),
-                ) {
-                    Text("Edit")
-                }
-            }
-        },
-    ) {
-        Box {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        WaterActionTile(
+            selected = shouldWater,
+            onClick = { shouldWater = !shouldWater },
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+                .size(actionSize),
+        )
+
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offset.value.roundToInt(), 0) }
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        coroutineScope.launch {
+                            val minimumOffset = if (actionSwipeOpen) 0f else -editThresholdPx
+                            offset.snapTo((offset.value + delta).coerceIn(minimumOffset, openOffsetPx))
+                        }
+                    },
+                    onDragStopped = {
+                        coroutineScope.launch {
+                            when {
+                                actionSwipeOpen && offset.value < openOffsetPx * 0.65f -> closeAndSaveActions()
+                                actionSwipeOpen -> offset.animateTo(openOffsetPx)
+                                offset.value > openOffsetPx * 0.35f -> {
+                                    actionSwipeOpen = true
+                                    offset.animateTo(openOffsetPx)
+                                }
+                                offset.value < -editThresholdPx * 0.6f -> {
+                                    offset.animateTo(0f)
+                                    onEdit()
+                                }
+                                else -> offset.animateTo(0f)
+                            }
+                        }
+                    },
+                ),
+        ) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -199,5 +241,30 @@ private fun PlantItem(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun WaterActionTile(
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val backgroundColor = if (selected) Color(0xFF2196F3) else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.WaterDrop,
+            contentDescription = "Water plant",
+            tint = contentColor,
+            modifier = Modifier.size(32.dp),
+        )
     }
 }

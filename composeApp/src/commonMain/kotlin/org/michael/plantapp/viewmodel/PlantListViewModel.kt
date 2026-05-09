@@ -2,6 +2,8 @@ package org.michael.plantapp.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import org.michael.plantapp.model.Plant
 import org.michael.plantapp.model.PlantId
@@ -57,6 +59,15 @@ class PlantListViewModel : ViewModel() {
                 intensity = intensity,
                 notes = notes.trim(),
             ),
+        )
+    }
+
+    @OptIn(ExperimentalTime::class)
+    fun waterPlant(plantId: PlantId, intensity: WateringIntensity = WateringIntensity.Moderate) {
+        addWatering(
+            plantId = plantId,
+            wateredAt = Clock.System.now(),
+            intensity = intensity,
         )
     }
 
