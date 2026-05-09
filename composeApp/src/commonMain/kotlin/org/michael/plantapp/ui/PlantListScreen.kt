@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.michael.plantapp.model.Plant
+import org.michael.plantapp.model.PlantWateringSummary
 import org.michael.plantapp.viewmodel.PlantListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +47,13 @@ fun PlantListScreen(
     onEditPlant: (Plant) -> Unit,
 ) {
     var deletingPlant by remember { mutableStateOf<Plant?>(null) }
+    val wateringSummaries = viewModel.wateringSummariesByPlant
+    val plantListItems = viewModel.plants.map { plant ->
+        PlantListItem(
+            plant = plant,
+            wateringSummary = wateringSummaries[plant.id] ?: PlantWateringSummary(),
+        )
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("My plants") }) },
@@ -60,7 +68,7 @@ fun PlantListScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            if (viewModel.plants.isEmpty()) {
+            if (plantListItems.isEmpty()) {
                 Text(
                     text = "No plants yet — tap + to add one",
                     style = MaterialTheme.typography.bodyLarge,
@@ -69,11 +77,11 @@ fun PlantListScreen(
                 )
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(viewModel.plants, key = { it.id }) { plant ->
+                    items(plantListItems, key = { it.plant.id }) { item ->
                         PlantItem(
-                            plant = plant,
-                            onEdit = { onEditPlant(plant) },
-                            onDeleteRequest = { deletingPlant = plant },
+                            item = item,
+                            onEdit = { onEditPlant(item.plant) },
+                            onDeleteRequest = { deletingPlant = item.plant },
                         )
                     }
                 }
@@ -99,14 +107,21 @@ fun PlantListScreen(
     }
 }
 
+private data class PlantListItem(
+    val plant: Plant,
+    val wateringSummary: PlantWateringSummary = PlantWateringSummary(),
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun PlantItem(
-    plant: Plant,
+    item: PlantListItem,
     onEdit: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    val plant = item.plant
+    val wateringSummary = item.wateringSummary
 
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -158,6 +173,13 @@ private fun PlantItem(
                     if (plant.scientificName.isNotBlank()) {
                         Text(
                             text = plant.scientificName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (wateringSummary.lastWateredAt != null) {
+                        Text(
+                            text = "Last watered ${wateringSummary.lastWateredAt}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

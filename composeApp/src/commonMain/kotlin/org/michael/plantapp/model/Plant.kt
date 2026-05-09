@@ -1,7 +1,9 @@
 package org.michael.plantapp.model
 
+typealias PlantId = Long
+
 data class Plant(
-    val id: Long,
+    val id: PlantId,
     val name: String,
     val scientificName: String = "",
     val knownPlantId: String? = null,
