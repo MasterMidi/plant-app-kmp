@@ -9,8 +9,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,15 +38,15 @@ fun PlantFormScreen(
     existing: Plant? = null,
     initialName: String = existing?.name ?: "",
     initialScientificName: String = existing?.scientificName ?: "",
-    initialKnownPlantScientificName: String? = existing?.knownPlantScientificName,
-    onSave: (name: String, scientificName: String, knownPlantScientificName: String?) -> Unit,
+    initialKnownPlantId: String? = existing?.knownPlantId,
+    onSave: (name: String, scientificName: String, knownPlantId: String?) -> Unit,
     onCancel: () -> Unit,
-    onSearchKnownPlant: (name: String, scientificName: String, knownPlantScientificName: String?) -> Unit,
+    onSearchKnownPlant: (name: String, scientificName: String, knownPlantId: String?) -> Unit,
 ) {
     var name by remember(existing?.id, initialName) { mutableStateOf(initialName) }
     var scientificName by remember(existing?.id, initialScientificName) { mutableStateOf(initialScientificName) }
-    var knownPlantScientificName by remember(existing?.id, initialKnownPlantScientificName) {
-        mutableStateOf(initialKnownPlantScientificName)
+    var knownPlantId by remember(existing?.id, initialKnownPlantId) {
+        mutableStateOf(initialKnownPlantId)
     }
 
     Scaffold(
@@ -72,21 +78,35 @@ fun PlantFormScreen(
                 value = scientificName,
                 onValueChange = {
                     scientificName = it
-                    knownPlantScientificName = null
+                    knownPlantId = null
                 },
                 label = { Text("Scientific name") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                leadingIcon = if (knownPlantId != null) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Linked to known plant",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                } else {
+                    null
+                },
                 trailingIcon = {
-                    TextButton(
-                        onClick = { onSearchKnownPlant(name, scientificName, knownPlantScientificName) },
+                    IconButton(
+                        onClick = { onSearchKnownPlant(name, scientificName, knownPlantId) },
                     ) {
-                        Text("Search")
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search known plants",
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (knownPlantScientificName != null) {
+            if (knownPlantId != null) {
                 Spacer(Modifier.height(8.dp))
                 Text("Linked to known plant")
             }
@@ -97,7 +117,7 @@ fun PlantFormScreen(
                 }
                 Spacer(Modifier.width(8.dp))
                 Button(
-                    onClick = { onSave(name, scientificName, knownPlantScientificName) },
+                    onClick = { onSave(name, scientificName, knownPlantId) },
                     enabled = name.isNotBlank(),
                 ) {
                     Text(if (existing == null) "Add" else "Save")

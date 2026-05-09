@@ -4,5 +4,5 @@ data class Plant(
     val id: Long,
     val name: String,
     val scientificName: String = "",
-    val knownPlantScientificName: String? = null,
+    val knownPlantId: String? = null,
 )

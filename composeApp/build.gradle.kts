@@ -34,6 +34,7 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
+            implementation(compose.materialIconsExtended)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
@@ -79,4 +80,3 @@ android {
 dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
-

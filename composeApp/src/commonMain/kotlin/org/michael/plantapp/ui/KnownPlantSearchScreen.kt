@@ -82,7 +82,7 @@ fun KnownPlantSearchScreen(
                 )
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(filteredPlants, key = { it.scientificName }) { plant ->
+                    items(filteredPlants, key = { it.id }) { plant ->
                         KnownPlantItem(
                             plant = plant,
                             onClick = { onSelectPlant(plant) },

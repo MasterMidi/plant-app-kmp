@@ -7,9 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import org.michael.plantapp.model.SampleKnownPlants
 import org.michael.plantapp.model.KnownPlant
 import org.michael.plantapp.model.Plant
+import org.michael.plantapp.model.SampleKnownPlants
 import org.michael.plantapp.ui.KnownPlantSearchScreen
 import org.michael.plantapp.ui.PlantFormScreen
 import org.michael.plantapp.ui.PlantListScreen
@@ -31,19 +31,19 @@ fun App() {
             is PlantRoute.Create -> PlantFormScreen(
                 initialName = currentRoute.draft.name,
                 initialScientificName = currentRoute.draft.scientificName,
-                initialKnownPlantScientificName = currentRoute.draft.knownPlantScientificName,
-                onSave = { name, scientificName, knownPlantScientificName ->
-                    viewModel.addPlant(name, scientificName, knownPlantScientificName)
+                initialKnownPlantId = currentRoute.draft.knownPlantId,
+                onSave = { name, scientificName, knownPlantId ->
+                    viewModel.addPlant(name, scientificName, knownPlantId)
                     route = PlantRoute.List
                 },
                 onCancel = { route = PlantRoute.List },
-                onSearchKnownPlant = { name, scientificName, knownPlantScientificName ->
+                onSearchKnownPlant = { name, scientificName, knownPlantId ->
                     route = PlantRoute.SelectKnownPlant(
                         returnTo = PlantFormRoute.Create(
                             PlantDraft(
                                 name = name,
                                 scientificName = scientificName,
-                                knownPlantScientificName = knownPlantScientificName,
+                                knownPlantId = knownPlantId,
                             ),
                         ),
                     )
@@ -66,26 +66,26 @@ fun App() {
                         existing = plant,
                         initialName = draft.name,
                         initialScientificName = draft.scientificName,
-                        initialKnownPlantScientificName = draft.knownPlantScientificName,
-                        onSave = { name, scientificName, knownPlantScientificName ->
+                        initialKnownPlantId = draft.knownPlantId,
+                        onSave = { name, scientificName, knownPlantId ->
                             viewModel.updatePlant(
                                 plant.copy(
                                     name = name.trim(),
                                     scientificName = scientificName.trim(),
-                                    knownPlantScientificName = knownPlantScientificName?.takeIf { it.isNotBlank() },
+                                    knownPlantId = knownPlantId?.takeIf { it.isNotBlank() },
                                 ),
                             )
                             route = PlantRoute.List
                         },
                         onCancel = { route = PlantRoute.List },
-                        onSearchKnownPlant = { name, scientificName, knownPlantScientificName ->
+                        onSearchKnownPlant = { name, scientificName, knownPlantId ->
                             route = PlantRoute.SelectKnownPlant(
                                 returnTo = PlantFormRoute.Edit(
                                     plantId = plant.id,
                                     draft = PlantDraft(
                                         name = name,
                                         scientificName = scientificName,
-                                        knownPlantScientificName = knownPlantScientificName,
+                                        knownPlantId = knownPlantId,
                                     ),
                                 ),
                             )
@@ -122,13 +122,13 @@ private sealed interface PlantFormRoute {
 private data class PlantDraft(
     val name: String = "",
     val scientificName: String = "",
-    val knownPlantScientificName: String? = null,
+    val knownPlantId: String? = null,
 )
 
 private fun Plant.toDraft() = PlantDraft(
     name = name,
     scientificName = scientificName,
-    knownPlantScientificName = knownPlantScientificName,
+    knownPlantId = knownPlantId,
 )
 
 private fun PlantFormRoute.toRoute(): PlantRoute = when (this) {
@@ -144,5 +144,5 @@ private fun PlantFormRoute.withSelectedKnownPlant(knownPlant: KnownPlant): Plant
 private fun PlantDraft.withSelectedKnownPlant(knownPlant: KnownPlant) = copy(
     name = name.ifBlank { knownPlant.commonName },
     scientificName = knownPlant.scientificName,
-    knownPlantScientificName = knownPlant.scientificName,
+    knownPlantId = knownPlant.id,
 )
