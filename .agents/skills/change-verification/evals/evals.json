@@ -1,0 +1,23 @@
+{
+  "skill_name": "change-verification",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I changed SQLDelight migrations and the app compiles. Verify it actually works before I ship it.",
+      "expected_output": "The agent should run Gradle checks/builds, install and launch the Android app, preserve installed data, and inspect crash logs for migration failures.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I updated a Compose screen. Make sure the app still works on Android.",
+      "expected_output": "The agent should run checks/builds and launch the app on an emulator or connected device, starting an emulator if needed.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "No emulator is running. Verify my Android change anyway.",
+      "expected_output": "The agent should check devices, start the configured plant-app-test emulator or create it if missing, wait for boot, install, launch, and report blockers if emulator startup fails.",
+      "files": []
+    }
+  ]
+}
