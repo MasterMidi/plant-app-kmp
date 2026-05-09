@@ -9,7 +9,7 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "org.michael.plantapp.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
 
