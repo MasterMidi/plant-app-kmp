@@ -117,13 +117,13 @@
             category = "build";
             name     = "build-debug";
             help     = "Build the Android debug APK";
-            command  = "./gradlew :composeApp:assembleDebug";
+            command  = "./gradlew :androidApp:assembleDebug";
           }
           {
             category = "build";
             name     = "build-release";
             help     = "Build the Android release APK";
-            command  = "./gradlew :composeApp:assembleRelease";
+            command  = "./gradlew :androidApp:assembleRelease";
           }
 
           # ── Android / Emulator ───────────────────────────────────────
@@ -163,7 +163,7 @@
             help     = "Build, install and launch the app on device/emulator";
             command  = ''
               echo "🔨 Building and installing..."
-              ./gradlew :composeApp:installDebug && \
+              ./gradlew :androidApp:installDebug && \
               adb shell am start -n org.michael.plantapp/.MainActivity && \
               echo "✅ App launched!"
             '';
@@ -193,8 +193,8 @@
           {
             category = "test";
             name     = "test-common";
-            help     = "Run shared (commonTest) unit tests";
-            command  = "./gradlew :composeApp:testDebugUnitTest";
+            help     = "Run shared module checks";
+            command  = "./gradlew :composeApp:check";
           }
 
           # ── Utilities ────────────────────────────────────────────────
