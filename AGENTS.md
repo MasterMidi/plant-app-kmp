@@ -1,5 +1,7 @@
 # Coding Agent Instructions
 
+Always do exploration and longer tasks with subagents, to prevent cluttering the main context.
+
 ## Skills
 
 - This repo uses Jujutsu. Load the `jujutsu` skill before any VCS operation, and do not use raw git commands.
@@ -13,6 +15,12 @@
 - Describe the current jj change before editing: `jj desc -m "Message"`.
 - Verify changes with the `change-verification` skill before moving to the next jj change.
 - Prefer verification through the dev shell and include an Android app launch when feasible.
+
+## Coding Style
+
+- Keep functions small within reason.
+- Each function should do one thing, not many things.
+- Keep each function at one level of abstraction to avoid large functions that are hard to work with.
 
 ## Project Shape
 
