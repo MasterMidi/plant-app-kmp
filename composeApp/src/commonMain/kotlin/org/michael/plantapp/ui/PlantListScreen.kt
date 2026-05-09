@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import org.michael.plantapp.model.Pest
 import org.michael.plantapp.model.Plant
 import org.michael.plantapp.model.PlantWateringSummary
 import org.michael.plantapp.viewmodel.PlantListViewModel
@@ -68,9 +69,11 @@ fun PlantListScreen(
     var deletingPlant by remember { mutableStateOf<Plant?>(null) }
     var detailItem by remember { mutableStateOf<PlantListItem?>(null) }
     val wateringSummaries = viewModel.wateringSummariesByPlant
+    val pestsById = viewModel.pests.associateBy { it.id }
     val plantListItems = viewModel.plants.map { plant ->
         PlantListItem(
             plant = plant,
+            pests = plant.pestIds.mapNotNull { pestsById[it] },
             wateringSummary = wateringSummaries[plant.id] ?: PlantWateringSummary(),
         )
     }
@@ -162,6 +165,7 @@ fun PlantListScreen(
 
 private data class PlantListItem(
     val plant: Plant,
+    val pests: List<Pest> = emptyList(),
     val wateringSummary: PlantWateringSummary = PlantWateringSummary(),
 )
 
@@ -178,6 +182,7 @@ private fun PlantItem(
     var shouldWater by remember(item.plant.id) { mutableStateOf(false) }
     var actionSwipeOpen by remember(item.plant.id) { mutableStateOf(false) }
     val plant = item.plant
+    val pests = item.pests
     val wateringSummary = item.wateringSummary
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -265,6 +270,13 @@ private fun PlantItem(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                    if (pests.isNotEmpty()) {
+                        Text(
+                            text = "Infested: ${pests.joinToString { it.name }}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
             DropdownMenu(
@@ -290,6 +302,7 @@ private fun PlantDetailsDialog(
     onEdit: () -> Unit,
 ) {
     val plant = item.plant
+    val pests = item.pests
     val wateringSummary = item.wateringSummary
 
     AlertDialog(
@@ -333,6 +346,20 @@ private fun PlantDetailsDialog(
                         text = plant.scientificName,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                if (pests.isNotEmpty()) {
+                    Text(
+                        text = "Pest status",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                    Text(
+                        text = "Infested: ${pests.joinToString { it.name }}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
                     )
                 }
 

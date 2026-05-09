@@ -7,4 +7,5 @@ data class Plant(
     val name: String,
     val scientificName: String = "",
     val knownPlantId: String? = null,
+    val pestIds: List<PestId> = emptyList(),
 )

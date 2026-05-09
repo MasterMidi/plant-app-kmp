@@ -33,3 +33,7 @@ Every commit in this repository **must compile and build successfully**. No matt
 - **Reviewability:** Each commit tells a clear story and can be reviewed independently.
 - **Revertability:** If a change causes problems, it can be cleanly reverted without collateral damage.
 - **Time travel:** At any point in history, the project is in a working state — useful for debugging, benchmarking, and understanding evolution.
+
+## Code Organization
+
+- Prefer placing standalone classes, enums, typealiases, and object definitions in their own source files named after the primary type. Keep a type inside another file only when it is a small helper that is tightly scoped to that file or an intentionally nested/subordinate type.
