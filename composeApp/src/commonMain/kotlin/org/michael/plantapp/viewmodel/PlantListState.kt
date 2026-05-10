@@ -10,7 +10,7 @@ import org.michael.plantapp.model.summariesByPlant
 
 data class PlantListState(
     val plants: List<Plant> = emptyList(),
-    val pests: List<Pest> = BuiltInPests.all,
+    val pests: List<Pest> = BuiltInPests,
     val waterings: List<Watering> = emptyList(),
 ) {
     val wateringSummariesByPlant: Map<PlantId, PlantWateringSummary>
