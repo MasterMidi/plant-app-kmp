@@ -154,6 +154,29 @@
           }
           {
             category = "android";
+            name     = "android-studio";
+            help     = "Launch locally installed Android Studio detached from the terminal";
+            command  = ''
+              # Strip our own directory from PATH to avoid finding this wrapper
+              STRIPPED_PATH=""
+              OLDIFS="$IFS"; IFS=:
+              for d in $PATH; do
+                if [ "$d" != "$(dirname "$0")" ]; then
+                  STRIPPED_PATH="''${STRIPPED_PATH}''${STRIPPED_PATH:+:}$d"
+                fi
+              done
+              IFS="$OLDIFS"
+              REAL_STUDIO=$(PATH="$STRIPPED_PATH" command -v android-studio 2>/dev/null)
+              if [ -z "$REAL_STUDIO" ]; then
+                echo "❌ android-studio not found on PATH"
+                exit 1
+              fi
+              setsid "$REAL_STUDIO" "$@" > /dev/null 2>&1 < /dev/null &
+              echo "🚀 Android Studio launched. You can close this terminal."
+            '';
+          }
+          {
+            category = "android";
             name     = "start-emulator";
             help     = "Start the emulator (pass extra flags after --)";
             command  = ''
