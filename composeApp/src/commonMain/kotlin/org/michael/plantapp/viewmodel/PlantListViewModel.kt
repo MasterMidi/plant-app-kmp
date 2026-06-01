@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import org.michael.plantapp.data.local.PlantLocalDataSource
 import org.michael.plantapp.model.Pest
 import org.michael.plantapp.model.PestId
 import org.michael.plantapp.model.Plant
@@ -15,13 +16,22 @@ import org.michael.plantapp.model.PlantId
 import org.michael.plantapp.model.Watering
 import org.michael.plantapp.model.WateringIntensity
 
-class PlantListViewModel : ViewModel() {
-    private var nextId = 1L
+class PlantListViewModel(
+    private val plantLocalDataSource: PlantLocalDataSource? = null,
+) : ViewModel() {
     private var nextPestId = 1L
     private var nextWateringId = 1L
 
     private val _state = MutableStateFlow(PlantListState())
     val state: StateFlow<PlantListState> = _state.asStateFlow()
+
+    init {
+        plantLocalDataSource?.let { dataSource ->
+            _state.update { state ->
+                state.copy(plants = dataSource.getAllPlants())
+            }
+        }
+    }
 
     fun addPlant(
         name: String,
@@ -29,18 +39,20 @@ class PlantListViewModel : ViewModel() {
         knownPlantId: String? = null,
         pestIds: List<PestId> = emptyList(),
     ) {
+        val savedPlant = plantLocalDataSource?.savePlant(name) ?: Plant(
+            id = nextPreviewPlantId(),
+            name = name.trim(),
+        )
+
         _state.update { state ->
             state.copy(
-                plants = state.plants + Plant(
-                    id = nextId++,
-                    name = name.trim(),
-                    scientificName = scientificName.trim(),
-                    knownPlantId = knownPlantId?.takeIf { it.isNotBlank() },
-                    pestIds = knownPestIds(pestIds),
-                ),
+                plants = state.plants + savedPlant,
             )
         }
     }
+
+    private fun nextPreviewPlantId(): PlantId =
+        (state.value.plants.maxOfOrNull { it.id } ?: 0L) + 1L
 
     fun addPest(name: String, description: String): Pest {
         val pest = Pest(
@@ -56,11 +68,18 @@ class PlantListViewModel : ViewModel() {
         pestIds.distinct().filter { id -> state.value.pests.any { it.id == id } }
 
     fun updatePlant(plant: Plant) {
+        val savedPlant = plantLocalDataSource?.savePlant(plant) ?: plant.copy(
+            name = plant.name.trim(),
+            scientificName = plant.scientificName.trim(),
+            knownPlantId = plant.knownPlantId?.takeIf { it.isNotBlank() },
+            pestIds = knownPestIds(plant.pestIds),
+        )
+
         _state.update { state ->
             state.copy(
                 plants = state.plants.map { existingPlant ->
                     if (existingPlant.id == plant.id) {
-                        plant.copy(pestIds = knownPestIds(plant.pestIds))
+                        savedPlant
                     } else {
                         existingPlant
                     }
@@ -107,6 +126,7 @@ class PlantListViewModel : ViewModel() {
             .sortedByDescending { it.wateredAt }
 
     fun deletePlant(id: PlantId) {
+        plantLocalDataSource?.deletePlant(id)
         _state.update { state ->
             state.copy(
                 plants = state.plants.filterNot { it.id == id },

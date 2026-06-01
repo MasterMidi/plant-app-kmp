@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.michael.plantapp.data.local.PlantDatabaseFactory
+import org.michael.plantapp.data.local.PlantLocalDataSource
 import org.michael.plantapp.model.Pest
 import org.michael.plantapp.model.PestId
 import org.michael.plantapp.model.Plant
@@ -29,12 +31,21 @@ import org.michael.plantapp.viewmodel.PlantListState
 import org.michael.plantapp.viewmodel.PlantListViewModel
 
 @Composable
-fun App() {
+fun App(
+    databaseFactory: PlantDatabaseFactory? = null,
+) {
     var isDarkTheme by remember { mutableStateOf(false) }
     val colorScheme = if (isDarkTheme) darkColorScheme() else lightColorScheme()
 
     MaterialTheme(colorScheme = colorScheme) {
-        val viewModel = viewModel { PlantListViewModel() }
+        val plantLocalDataSource = remember(databaseFactory) {
+            databaseFactory
+                ?.createDatabase()
+                ?.let(::PlantLocalDataSource)
+        }
+        val viewModel = viewModel {
+            PlantListViewModel(plantLocalDataSource)
+        }
         val plantListState by viewModel.state.collectAsStateWithLifecycle()
 
         PlantAppContent(

@@ -1,0 +1,29 @@
+CREATE TABLE plants (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL
+);
+
+insertNewPlant:
+INSERT OR REPLACE INTO plants(name)
+VALUES (:name);
+
+-- used to get the row id just created
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+insertExistingPlant:
+INSERT OR REPLACE INTO plants(id, name)
+VALUES (:id, :name);
+
+selectAllPlants:
+SELECT *
+FROM plants;
+
+selectPlantById:
+SELECT *
+FROM plants
+WHERE id = :id;
+
+deletePlant:
+DELETE FROM plants
+WHERE id = :id;
