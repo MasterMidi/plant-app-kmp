@@ -40,6 +40,7 @@
         platforms-android-35
         platforms-android-36
         emulator
+        ndk-28-2-13676358
         sources-android-35
         # For aarch64-linux, replace with:
         #   system-images-android-35-google-apis-arm64-v8a
