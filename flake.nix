@@ -90,7 +90,15 @@
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
         '';
 
-        env = [
+        env = pkgs.lib.mkForce [
+          {
+            name = "XDG_DATA_DIRS";
+            eval = "$DEVSHELL_DIR/share:\${XDG_DATA_DIRS:-/usr/local/share:/usr/share}";
+          }
+          {
+            name = "PRJ_DATA_DIR";
+            eval = "\${PRJ_DATA_DIR:-$PRJ_ROOT/.data}";
+          }
           { name = "ANDROID_HOME";     value = sdkPath; }
           { name = "ANDROID_SDK_ROOT"; value = sdkPath; }
           { name = "ANDROID_AVD_HOME"; eval = "$PRJ_ROOT/.android/avd"; }
